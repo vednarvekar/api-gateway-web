@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Pause, Play, Trash2 } from "lucide-react";
@@ -8,25 +7,19 @@ import { PageHeader } from "@/components/dashboard-ui";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/logs")({
-  head: () => ({
-    meta: [
-      { title: "Live Logs · API Gateway" },
-      { name: "description", content: "Streaming gateway access logs." },
-    ],
-  }),
-  component: LogsPage,
-});
-
 const FILTERS = ["all", "info", "warn", "error"] as const;
 type Filter = (typeof FILTERS)[number];
 
-function LogsPage() {
+export default function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>(() => seedLogs(40));
   const [paused, setPaused] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.title = "Live Logs · API Gateway";
+  }, []);
 
   useEffect(() => {
     if (paused) return;
@@ -43,7 +36,11 @@ function LogsPage() {
   const filtered = useMemo(() => {
     return logs.filter((l) => {
       if (filter !== "all" && l.level !== filter) return false;
-      if (query && !`${l.path} ${l.clientIp} ${l.upstream}`.toLowerCase().includes(query.toLowerCase())) return false;
+      if (
+        query &&
+        !`${l.path} ${l.clientIp} ${l.upstream}`.toLowerCase().includes(query.toLowerCase())
+      )
+        return false;
       return true;
     });
   }, [logs, filter, query]);
@@ -68,18 +65,30 @@ function LogsPage() {
                   onClick={() => setFilter(f)}
                   className={cn(
                     "px-2.5 h-8 text-[11px] font-mono-num uppercase tracking-wider transition-colors",
-                    filter === f ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
+                    filter === f
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {f}
                 </button>
               ))}
             </div>
-            <Button size="sm" variant="outline" className="h-8" onClick={() => setPaused((p) => !p)}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8"
+              onClick={() => setPaused((p) => !p)}
+            >
               {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
               {paused ? "Resume" : "Pause"}
             </Button>
-            <Button size="sm" variant="ghost" className="h-8 text-muted-foreground" onClick={() => setLogs([])}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-muted-foreground"
+              onClick={() => setLogs([])}
+            >
               <Trash2 className="size-3.5" />
             </Button>
           </div>
@@ -113,25 +122,41 @@ function LogsPage() {
                   l.level === "warn" && "bg-warning/5",
                 )}
               >
-                <td className="px-3 py-1.5 text-muted-foreground">{format(new Date(l.ts), "HH:mm:ss")}</td>
+                <td className="px-3 py-1.5 text-muted-foreground">
+                  {format(new Date(l.ts), "HH:mm:ss")}
+                </td>
                 <td className="px-3 py-1.5">
-                  <span className={cn("px-1.5 py-0.5 rounded text-[10px]", methodColor(l.method))}>{l.method}</span>
+                  <span className={cn("px-1.5 py-0.5 rounded text-[10px]", methodColor(l.method))}>
+                    {l.method}
+                  </span>
                 </td>
                 <td className={cn("px-3 py-1.5 text-right", statusColor(l.status))}>{l.status}</td>
                 <td className="px-3 py-1.5">{l.path}</td>
                 <td className="px-3 py-1.5 text-muted-foreground">{l.upstream}</td>
                 <td className="px-3 py-1.5 text-muted-foreground">{l.clientIp}</td>
                 <td className="px-3 py-1.5">
-                  <span className={cn(
-                    "text-[10px] uppercase tracking-wider",
-                    l.cache === "hit" ? "text-success" : l.cache === "miss" ? "text-warning" : "text-muted-foreground",
-                  )}>{l.cache}</span>
+                  <span
+                    className={cn(
+                      "text-[10px] uppercase tracking-wider",
+                      l.cache === "hit"
+                        ? "text-success"
+                        : l.cache === "miss"
+                          ? "text-warning"
+                          : "text-muted-foreground",
+                    )}
+                  >
+                    {l.cache}
+                  </span>
                 </td>
                 <td className="px-3 py-1.5 text-right text-muted-foreground">{l.durationMs}ms</td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={8} className="px-3 py-12 text-center text-muted-foreground">No matching logs</td></tr>
+              <tr>
+                <td colSpan={8} className="px-3 py-12 text-center text-muted-foreground">
+                  No matching logs
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -142,12 +167,17 @@ function LogsPage() {
 
 function methodColor(m: LogEntry["method"]) {
   switch (m) {
-    case "GET": return "bg-info/15 text-info";
-    case "POST": return "bg-success/15 text-success";
+    case "GET":
+      return "bg-info/15 text-info";
+    case "POST":
+      return "bg-success/15 text-success";
     case "PUT":
-    case "PATCH": return "bg-warning/15 text-warning";
-    case "DELETE": return "bg-destructive/15 text-destructive";
-    default: return "bg-muted text-muted-foreground";
+    case "PATCH":
+      return "bg-warning/15 text-warning";
+    case "DELETE":
+      return "bg-destructive/15 text-destructive";
+    default:
+      return "bg-muted text-muted-foreground";
   }
 }
 

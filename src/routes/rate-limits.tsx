@@ -1,22 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getRateLimited } from "@/lib/gateway-client";
 import { PageHeader } from "@/components/dashboard-ui";
 
-export const Route = createFileRoute("/rate-limits")({
-  head: () => ({
-    meta: [
-      { title: "Rate Limits · API Gateway" },
-      { name: "description", content: "Currently throttled clients and the rules that fired." },
-    ],
-  }),
-  component: RateLimitsPage,
-});
-
-function RateLimitsPage() {
-  const { data } = useQuery({ queryKey: ["rate-limits"], queryFn: getRateLimited, refetchInterval: 4000 });
+export default function RateLimitsPage() {
+  const [data, setData] = useState<Awaited<ReturnType<typeof getRateLimited>>>([]);
   const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    document.title = "Rate Limits · API Gateway";
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const rows = await getRateLimited();
+      if (!cancelled) setData(rows);
+    };
+    run();
+    const timer = setInterval(run, 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
@@ -50,15 +57,21 @@ function RateLimitsPage() {
               <div className="font-mono-num text-sm break-all">{c.identifier}</div>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div>
-                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">Hits</div>
+                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                    Hits
+                  </div>
                   <div className="font-mono-num">{c.hits}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">Window</div>
+                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                    Window
+                  </div>
                   <div className="font-mono-num">{c.windowSec}s</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">Resets in</div>
+                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                    Resets in
+                  </div>
                   <div className="font-mono-num text-warning">{remain}s</div>
                 </div>
               </div>

@@ -1,12 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  Activity,
-  KeyRound,
-  Network,
-  ScrollText,
-  ShieldAlert,
-  Waves,
-} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Activity, KeyRound, Network, ScrollText, ShieldAlert, Waves } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: typeof Activity; exact?: boolean };
@@ -20,7 +13,7 @@ const NAV: NavItem[] = [
 ];
 
 export function AppSidebar() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { pathname } = useLocation();
 
   return (
     <aside className="w-60 shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col">
@@ -47,7 +40,7 @@ export function AppSidebar() {
           return (
             <Link
               key={item.to}
-              to={item.to as "/"}
+              to={item.to}
               className={cn(
                 "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                 "hover:bg-sidebar-accent",
@@ -61,9 +54,7 @@ export function AppSidebar() {
                 )}
               />
               <span>{item.label}</span>
-              {active && (
-                <span className="ml-auto size-1.5 rounded-full bg-primary" />
-              )}
+              {active && <span className="ml-auto size-1.5 rounded-full bg-primary" />}
             </Link>
           );
         })}

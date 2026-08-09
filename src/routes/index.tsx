@@ -1,5 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -15,27 +14,8 @@ import {
   YAxis,
 } from "recharts";
 import { format } from "date-fns";
-import {
-  getOverview,
-  getStatusMix,
-  getTimeseries,
-  getTopRoutes,
-} from "@/lib/gateway-client";
-import {
-  PageHeader,
-  StatCard,
-  formatNumber,
-} from "@/components/dashboard-ui";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Overview · API Gateway" },
-      { name: "description", content: "Real-time RPS, latency, and error metrics for the gateway." },
-    ],
-  }),
-  component: OverviewPage,
-});
+import { getOverview, getStatusMix, getTimeseries, getTopRoutes } from "@/lib/gateway-client";
+import { PageHeader, StatCard, formatNumber } from "@/components/dashboard-ui";
 
 const STATUS_COLOR: Record<string, string> = {
   "2xx": "var(--color-chart-1)",
@@ -44,13 +24,60 @@ const STATUS_COLOR: Record<string, string> = {
   "5xx": "var(--color-chart-4)",
 };
 
-function OverviewPage() {
-  const overview = useQuery({ queryKey: ["overview"], queryFn: getOverview, refetchInterval: 5000 });
-  const series = useQuery({ queryKey: ["series"], queryFn: () => getTimeseries(48), refetchInterval: 10_000 });
-  const mix = useQuery({ queryKey: ["mix"], queryFn: getStatusMix });
-  const top = useQuery({ queryKey: ["top"], queryFn: getTopRoutes });
+export default function OverviewPage() {
+  const [overview, setOverview] = useState<Awaited<ReturnType<typeof getOverview>>>();
+  const [series, setSeries] = useState<Awaited<ReturnType<typeof getTimeseries>>>([]);
+  const [mix, setMix] = useState<Awaited<ReturnType<typeof getStatusMix>>>([]);
+  const [top, setTop] = useState<Awaited<ReturnType<typeof getTopRoutes>>>([]);
 
-  const m = overview.data;
+  useEffect(() => {
+    document.title = "Overview · API Gateway";
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const data = await getOverview();
+      if (!cancelled) setOverview(data);
+    };
+    run();
+    const timer = setInterval(run, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const data = await getTimeseries(48);
+      if (!cancelled) setSeries(data);
+    };
+    run();
+    const timer = setInterval(run, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const [mixData, topData] = await Promise.all([getStatusMix(), getTopRoutes()]);
+      if (!cancelled) {
+        setMix(mixData);
+        setTop(topData);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const m = overview;
 
   return (
     <div className="flex flex-col">
@@ -102,7 +129,7 @@ function OverviewPage() {
           <ChartHeader title="Requests & errors" sub="last 24h · 30m buckets" />
           <div className="h-72 px-2 pb-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={series.data ?? []}>
+              <AreaChart data={series}>
                 <defs>
                   <linearGradient id="gReq" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.35} />
@@ -113,7 +140,11 @@ function OverviewPage() {
                     <stop offset="100%" stopColor="var(--color-chart-4)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
+                <CartesianGrid
+                  stroke="var(--color-border)"
+                  strokeDasharray="2 4"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="t"
                   tickFormatter={(v) => format(new Date(v), "HH:mm")}
@@ -131,8 +162,20 @@ function OverviewPage() {
                   width={36}
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--color-border)" }} />
-                <Area type="monotone" dataKey="requests" stroke="var(--color-chart-1)" strokeWidth={1.5} fill="url(#gReq)" />
-                <Area type="monotone" dataKey="errors" stroke="var(--color-chart-4)" strokeWidth={1.5} fill="url(#gErr)" />
+                <Area
+                  type="monotone"
+                  dataKey="requests"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={1.5}
+                  fill="url(#gReq)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="errors"
+                  stroke="var(--color-chart-4)"
+                  strokeWidth={1.5}
+                  fill="url(#gErr)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -153,20 +196,25 @@ function OverviewPage() {
                   stroke="var(--color-card)"
                   strokeWidth={2}
                 >
-                  {(mix.data ?? []).map((d) => (
+                  {mix.map((d) => (
                     <Cell key={d.code} fill={STATUS_COLOR[d.code]} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-1.5">
-              {(mix.data ?? []).map((s) => (
+              {mix.map((s) => (
                 <div key={s.code} className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-2">
-                    <span className="size-2 rounded-sm" style={{ background: STATUS_COLOR[s.code] }} />
+                    <span
+                      className="size-2 rounded-sm"
+                      style={{ background: STATUS_COLOR[s.code] }}
+                    />
                     <span className="font-mono-num">{s.code}</span>
                   </span>
-                  <span className="font-mono-num text-muted-foreground">{formatNumber(s.count)}</span>
+                  <span className="font-mono-num text-muted-foreground">
+                    {formatNumber(s.count)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -179,14 +227,18 @@ function OverviewPage() {
           <ChartHeader title="p95 latency" sub="last 24h · ms" />
           <div className="h-56 px-2 pb-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={series.data ?? []}>
+              <AreaChart data={series}>
                 <defs>
                   <linearGradient id="gLat" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.35} />
                     <stop offset="100%" stopColor="var(--color-chart-2)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
+                <CartesianGrid
+                  stroke="var(--color-border)"
+                  strokeDasharray="2 4"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="t"
                   tickFormatter={(v) => format(new Date(v), "HH:mm")}
@@ -204,7 +256,13 @@ function OverviewPage() {
                   width={36}
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--color-border)" }} />
-                <Area type="monotone" dataKey="p95" stroke="var(--color-chart-2)" strokeWidth={1.5} fill="url(#gLat)" />
+                <Area
+                  type="monotone"
+                  dataKey="p95"
+                  stroke="var(--color-chart-2)"
+                  strokeWidth={1.5}
+                  fill="url(#gLat)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -214,8 +272,12 @@ function OverviewPage() {
           <ChartHeader title="Top routes" sub="by requests · last 24h" />
           <div className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={224}>
-              <BarChart data={top.data ?? []} layout="vertical" margin={{ left: 16, right: 24 }}>
-                <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" horizontal={false} />
+              <BarChart data={top} layout="vertical" margin={{ left: 16, right: 24 }}>
+                <CartesianGrid
+                  stroke="var(--color-border)"
+                  strokeDasharray="2 4"
+                  horizontal={false}
+                />
                 <XAxis
                   type="number"
                   stroke="var(--color-muted-foreground)"
@@ -257,13 +319,23 @@ function ChartHeader({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-md border border-border bg-popover/95 backdrop-blur px-2.5 py-1.5 shadow-lg text-xs">
       {label && (
         <div className="font-mono-num text-[10px] text-muted-foreground mb-1">
-          {typeof label === "string" && label.includes("T") ? format(new Date(label), "MMM d · HH:mm") : label}
+          {typeof label === "string" && label.includes("T")
+            ? format(new Date(label), "MMM d · HH:mm")
+            : label}
         </div>
       )}
       {payload.map((p) => (

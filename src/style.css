@@ -105,9 +105,9 @@
 
   --chart-1: oklch(0.78 0.16 165); /* emerald */
   --chart-2: oklch(0.72 0.14 240); /* blue */
-  --chart-3: oklch(0.82 0.17 85);  /* amber */
-  --chart-4: oklch(0.66 0.21 22);  /* red */
-  --chart-5: oklch(0.7 0.18 305);  /* violet */
+  --chart-3: oklch(0.82 0.17 85); /* amber */
+  --chart-4: oklch(0.66 0.21 22); /* red */
+  --chart-5: oklch(0.7 0.18 305); /* violet */
 
   --sidebar: oklch(0.13 0.012 250);
   --sidebar-foreground: oklch(0.85 0.008 250);
@@ -193,6 +193,12 @@
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.6); opacity: 0.7; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
 }

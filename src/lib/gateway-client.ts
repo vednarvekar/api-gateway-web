@@ -23,12 +23,54 @@ function mulberry32(seed: number) {
 }
 
 const SEEDED_ROUTES: Omit<GatewayRoute, "requests24h" | "errorRate" | "p95">[] = [
-  { id: "r_user", path: "/user", upstream: "http://localhost:4001", authType: "jwt", roles: ["admin", "user"], enabled: true },
-  { id: "r_order", path: "/order", upstream: "http://localhost:4002", authType: "jwt", roles: ["admin", "user"], enabled: true },
-  { id: "r_public", path: "/public", upstream: "http://localhost:4003", authType: "none", roles: [], enabled: true },
-  { id: "r_admin", path: "/admin", upstream: "http://localhost:4005", authType: "jwt", roles: ["admin"], enabled: true },
-  { id: "r_billing", path: "/billing", upstream: "http://localhost:4006", authType: "apikey", roles: ["service"], enabled: true },
-  { id: "r_payments", path: "/payments", upstream: "http://localhost:4010", authType: "any", roles: ["admin", "user"], enabled: false },
+  {
+    id: "r_user",
+    path: "/user",
+    upstream: "http://localhost:4001",
+    authType: "jwt",
+    roles: ["admin", "user"],
+    enabled: true,
+  },
+  {
+    id: "r_order",
+    path: "/order",
+    upstream: "http://localhost:4002",
+    authType: "jwt",
+    roles: ["admin", "user"],
+    enabled: true,
+  },
+  {
+    id: "r_public",
+    path: "/public",
+    upstream: "http://localhost:4003",
+    authType: "none",
+    roles: [],
+    enabled: true,
+  },
+  {
+    id: "r_admin",
+    path: "/admin",
+    upstream: "http://localhost:4005",
+    authType: "jwt",
+    roles: ["admin"],
+    enabled: true,
+  },
+  {
+    id: "r_billing",
+    path: "/billing",
+    upstream: "http://localhost:4006",
+    authType: "apikey",
+    roles: ["service"],
+    enabled: true,
+  },
+  {
+    id: "r_payments",
+    path: "/payments",
+    upstream: "http://localhost:4010",
+    authType: "any",
+    roles: ["admin", "user"],
+    enabled: false,
+  },
 ];
 
 export async function getOverview(): Promise<OverviewMetrics> {
@@ -178,21 +220,101 @@ export async function revokeApiKey(id: string): Promise<void> {
 
 export async function getRateLimited(): Promise<RateLimitedClient[]> {
   return [
-    { id: "rl1", kind: "ip", identifier: "203.0.113.42", hits: 1284, windowSec: 60, blockedUntil: new Date(Date.now() + 42_000).toISOString(), route: "/user/profile" },
-    { id: "rl2", kind: "key", identifier: "sk_live_pxr…", hits: 612, windowSec: 60, blockedUntil: new Date(Date.now() + 120_000).toISOString(), route: "/order/list" },
-    { id: "rl3", kind: "ip", identifier: "198.51.100.7", hits: 488, windowSec: 60, blockedUntil: new Date(Date.now() + 18_000).toISOString(), route: "/public/feed" },
-    { id: "rl4", kind: "ip", identifier: "192.0.2.221", hits: 322, windowSec: 60, blockedUntil: new Date(Date.now() + 8_000).toISOString(), route: "/admin/users" },
+    {
+      id: "rl1",
+      kind: "ip",
+      identifier: "203.0.113.42",
+      hits: 1284,
+      windowSec: 60,
+      blockedUntil: new Date(Date.now() + 42_000).toISOString(),
+      route: "/user/profile",
+    },
+    {
+      id: "rl2",
+      kind: "key",
+      identifier: "sk_live_pxr…",
+      hits: 612,
+      windowSec: 60,
+      blockedUntil: new Date(Date.now() + 120_000).toISOString(),
+      route: "/order/list",
+    },
+    {
+      id: "rl3",
+      kind: "ip",
+      identifier: "198.51.100.7",
+      hits: 488,
+      windowSec: 60,
+      blockedUntil: new Date(Date.now() + 18_000).toISOString(),
+      route: "/public/feed",
+    },
+    {
+      id: "rl4",
+      kind: "ip",
+      identifier: "192.0.2.221",
+      hits: 322,
+      windowSec: 60,
+      blockedUntil: new Date(Date.now() + 8_000).toISOString(),
+      route: "/admin/users",
+    },
   ];
 }
 
 export async function getCircuits(): Promise<Circuit[]> {
   return [
-    { service: "user-service", upstream: "http://localhost:4001", state: "closed", errorRate: 0.004, openedAt: null, totalCalls: 3_412_120, rejections: 0 },
-    { service: "order-service", upstream: "http://localhost:4002", state: "closed", errorRate: 0.011, openedAt: null, totalCalls: 2_188_402, rejections: 12 },
-    { service: "public-service", upstream: "http://localhost:4003", state: "closed", errorRate: 0.0, openedAt: null, totalCalls: 1_440_980, rejections: 0 },
-    { service: "admin-service", upstream: "http://localhost:4005", state: "half-open", errorRate: 0.071, openedAt: new Date(Date.now() - 90_000).toISOString(), totalCalls: 612_402, rejections: 184 },
-    { service: "billing-service", upstream: "http://localhost:4006", state: "closed", errorRate: 0.002, openedAt: null, totalCalls: 1_902_551, rejections: 0 },
-    { service: "payments-service", upstream: "http://localhost:4010", state: "open", errorRate: 0.612, openedAt: new Date(Date.now() - 12 * 60_000).toISOString(), totalCalls: 14_200, rejections: 8_720 },
+    {
+      service: "user-service",
+      upstream: "http://localhost:4001",
+      state: "closed",
+      errorRate: 0.004,
+      openedAt: null,
+      totalCalls: 3_412_120,
+      rejections: 0,
+    },
+    {
+      service: "order-service",
+      upstream: "http://localhost:4002",
+      state: "closed",
+      errorRate: 0.011,
+      openedAt: null,
+      totalCalls: 2_188_402,
+      rejections: 12,
+    },
+    {
+      service: "public-service",
+      upstream: "http://localhost:4003",
+      state: "closed",
+      errorRate: 0.0,
+      openedAt: null,
+      totalCalls: 1_440_980,
+      rejections: 0,
+    },
+    {
+      service: "admin-service",
+      upstream: "http://localhost:4005",
+      state: "half-open",
+      errorRate: 0.071,
+      openedAt: new Date(Date.now() - 90_000).toISOString(),
+      totalCalls: 612_402,
+      rejections: 184,
+    },
+    {
+      service: "billing-service",
+      upstream: "http://localhost:4006",
+      state: "closed",
+      errorRate: 0.002,
+      openedAt: null,
+      totalCalls: 1_902_551,
+      rejections: 0,
+    },
+    {
+      service: "payments-service",
+      upstream: "http://localhost:4010",
+      state: "open",
+      errorRate: 0.612,
+      openedAt: new Date(Date.now() - 12 * 60_000).toISOString(),
+      totalCalls: 14_200,
+      rejections: 8_720,
+    },
   ];
 }
 
@@ -208,7 +330,14 @@ const PATHS: Array<{ path: string; upstream: string; auth: LogEntry["auth"] }> =
   { path: "/payments/charge", upstream: "payments-service", auth: "any" },
 ];
 const METHODS: LogEntry["method"][] = ["GET", "GET", "GET", "POST", "POST", "PUT", "DELETE"];
-const IPS = ["203.0.113.42", "198.51.100.7", "192.0.2.221", "10.0.4.18", "10.0.7.92", "172.16.3.55"];
+const IPS = [
+  "203.0.113.42",
+  "198.51.100.7",
+  "192.0.2.221",
+  "10.0.4.18",
+  "10.0.7.92",
+  "172.16.3.55",
+];
 
 let logCounter = 0;
 export function generateLog(): LogEntry {
@@ -222,7 +351,8 @@ export function generateLog(): LogEntry {
   else if (roll > 0.9) status = 404;
   else if (roll > 0.86) status = 401;
   const level: LogEntry["level"] = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
-  const cache = method === "GET" && Math.random() > 0.45 ? "hit" : method === "GET" ? "miss" : "bypass";
+  const cache =
+    method === "GET" && Math.random() > 0.45 ? "hit" : method === "GET" ? "miss" : "bypass";
   return {
     id: `log_${Date.now()}_${logCounter++}`,
     ts: new Date().toISOString(),

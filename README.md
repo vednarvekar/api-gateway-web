@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>A high-signal operations dashboard for modern API gateways.</strong><br />
-  Built with TanStack Start, React Query, Tailwind CSS v4, and a clean dark observability UI.
+  Built as a plain Vite + React SPA with a clean dark observability UI.
 </p>
 
 ---
@@ -26,27 +26,27 @@ It gives you one place to watch traffic, inspect health, and perform day-to-day 
 
 ## Stack at a glance
 
-| Layer | Technology |
-| --- | --- |
-| App framework | **TanStack Start** + **TanStack Router** (file-based routing) |
-| Data fetching/cache | **TanStack React Query** |
-| UI | **React 19** + **Tailwind CSS v4** + shadcn/Radix primitives |
-| Charts | **Recharts** |
-| Tooling | **Vite**, **TypeScript**, **ESLint**, **Prettier** |
-| Typography | Inter Variable + JetBrains Mono |
+| Layer         | Technology                                                   |
+| ------------- | ------------------------------------------------------------ |
+| App framework | **Vite** + **React 19**                                      |
+| Routing       | **React Router**                                             |
+| UI            | **React 19** + **Tailwind CSS v4** + shadcn/Radix primitives |
+| Charts        | **Recharts**                                                 |
+| Tooling       | **TypeScript**, **ESLint**, **Prettier**                     |
+| Typography    | Inter Variable + JetBrains Mono                              |
 
 ---
 
 ## Product surfaces
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Overview: live RPS, latency, error rate, status mix, top routes |
-| `/routes` | Route inventory + auth mode + role visibility + enable/disable toggle |
-| `/keys` | API key lifecycle: create, reveal once, revoke |
-| `/rate-limits` | Active Redis-backed throttling cards with countdowns |
-| `/circuits` | Circuit breaker state by upstream (`closed`, `half-open`, `open`) |
-| `/logs` | Streaming log table with level/search filters, pause/resume, clear |
+| Route          | Purpose                                                               |
+| -------------- | --------------------------------------------------------------------- |
+| `/`            | Overview: live RPS, latency, error rate, status mix, top routes       |
+| `/routes`      | Route inventory + auth mode + role visibility + enable/disable toggle |
+| `/keys`        | API key lifecycle: create, reveal once, revoke                        |
+| `/rate-limits` | Active Redis-backed throttling cards with countdowns                  |
+| `/circuits`    | Circuit breaker state by upstream (`closed`, `half-open`, `open`)     |
+| `/logs`        | Streaming log table with level/search filters, pause/resume, clear    |
 
 ---
 
@@ -61,14 +61,14 @@ Open the app at `http://localhost:3000` (or the Vite-assigned port shown in term
 
 ### Available scripts
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start local dev server |
-| `npm run build` | Production build |
-| `npm run build:dev` | Build with development mode |
-| `npm run preview` | Preview built output |
-| `npm run lint` | Lint TypeScript/TSX sources |
-| `npm run format` | Format repository with Prettier |
+| Command             | What it does                    |
+| ------------------- | ------------------------------- |
+| `npm run dev`       | Start local dev server          |
+| `npm run build`     | Production build                |
+| `npm run build:dev` | Build with development mode     |
+| `npm run preview`   | Preview built output            |
+| `npm run lint`      | Lint TypeScript/TSX sources     |
+| `npm run format`    | Format repository with Prettier |
 
 ---
 
@@ -76,6 +76,8 @@ Open the app at `http://localhost:3000` (or the Vite-assigned port shown in term
 
 ```txt
 src/
+  App.tsx                    # app layout + route table
+  main.tsx                   # SPA entrypoint
   components/
     app-sidebar.tsx          # left nav + environment/health indicators
     dashboard-ui.tsx         # reusable stat/header/status primitives
@@ -85,19 +87,13 @@ src/
   lib/
     gateway-client.ts        # mock gateway data + mutations + live log generator
     gateway-types.ts         # shared domain types
-    error-capture.ts         # SSR error capture bridge
-    error-page.ts            # fallback HTML page
   routes/
-    __root.tsx               # root shell, layout, global error boundaries
     index.tsx                # overview dashboard
     routes.tsx               # route management
     keys.tsx                 # API key management
     rate-limits.tsx
     circuits.tsx
     logs.tsx
-  router.tsx                 # router + query client context
-  start.ts                   # TanStack Start instance + middleware
-  server.ts                  # SSR entry + catastrophic error normalization
   style.css                  # Tailwind v4 theme tokens + utilities
 ```
 
@@ -120,15 +116,18 @@ As long as responses continue to satisfy `src/lib/gateway-types.ts`, the UI surf
 
 ---
 
-## Reliability and error behavior
+## Vercel deployment (SPA)
 
-- Root-level route error boundary with retry + home fallback (`src/routes/__root.tsx`)
-- Server middleware catch path in `src/start.ts`
-- SSR normalization in `src/server.ts` to handle swallowed `h3` catastrophic responses and still render a friendly error page
+This repo is configured for Vercel static deployment:
+
+- `vercel.json` rewrites all paths to `/index.html`
+- Vercel runs `npm run build`
+- Output directory is `dist/`
+
+That means deep links like `/routes` and `/logs` resolve correctly in production.
 
 ---
 
 ## Notes
 
-- `src/routeTree.gen.ts` is generated and should not be edited manually.
 - This repository currently includes `dist/` output and `node_modules/` in-tree; treat generated files as build artifacts.

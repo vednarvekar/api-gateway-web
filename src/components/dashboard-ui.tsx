@@ -14,9 +14,7 @@ export function PageHeader({
     <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
       <div>
         <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-        {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
@@ -54,9 +52,7 @@ export function StatCard({
           <span
             className={cn(
               "font-mono-num text-[11px] px-1.5 py-0.5 rounded",
-              delta >= 0
-                ? "text-success bg-success/10"
-                : "text-destructive bg-destructive/10",
+              delta >= 0 ? "text-success bg-success/10" : "text-destructive bg-destructive/10",
             )}
           >
             {delta >= 0 ? "+" : ""}
@@ -65,9 +61,7 @@ export function StatCard({
         )}
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="font-mono-num text-2xl font-semibold tracking-tight">
-          {value}
-        </span>
+        <span className="font-mono-num text-2xl font-semibold tracking-tight">{value}</span>
         {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
       </div>
       {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
